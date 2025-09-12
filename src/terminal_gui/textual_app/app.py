@@ -3,7 +3,7 @@ import asyncio
 import threading
 
 from textual.app import App, ComposeResult
-from textual.widgets import Button, Static, TabbedContent, TabPane
+from textual.widgets import Static, Button, Tabs, Tab
 
 import sys
 import os
@@ -13,7 +13,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import rclpy
 from terminal_node import TerminalNode
-
 
 
 class TerminalGUI(App):
@@ -34,40 +33,27 @@ class TerminalGUI(App):
         # Avvia l'executor ROS2 in un thread separato
         threading.Thread(target=self.executor.spin, daemon=True).start()
 
+  
     def compose(self) -> ComposeResult:
-        """Crea la UI con i tab."""
-        # Tabs principali
-        yield TabbedContent(
-            TabPane(
-                children=Static("Qui puoi gestire i servizi ROS"),
-                title="Services",
-                id="tab_services"
-            ),
-            TabPane(
-                children=Static("Qui puoi gestire Arm/Disarm"),
-                title="Arm/Disarm",
-                id="tab_arm"
-            ),
-            TabPane(
-                children=Static("Qui puoi gestire Takeoff/Landing/Navigate"),
-                title="Flight",
-                id="tab_flight"
-            ),
+        # Tabs
+        yield Tabs(
+            Tab("Services", id="tab_services"),
+            Tab("Arm/Disarm", id="tab_arm"),
+            Tab("Flight", id="tab_flight"),
         )
 
+        # Contenuti statici dei tab
+        yield Static("Qui puoi gestire i servizi ROS", id="content_services")
+        yield Static("Qui puoi gestire Arm/Disarm", id="content_arm")
+        yield Static("Qui puoi gestire Takeoff/Landing/Navigate", id="content_flight")
 
-        # Bottoni al di fuori dei Tab
+        # Bottoni
         yield Button("Arm", id="arm_button")
         yield Button("Disarm", id="disarm_button")
         yield Button("Enable Service", id="enable_service_button")
         yield Button("Reset Service", id="reset_service_button")
 
 
-        # Bottoni al di fuori dei Tab
-        yield Button("Arm", id="arm_button")
-        yield Button("Disarm", id="disarm_button")
-        yield Button("Enable Service", id="enable_service_button")
-        yield Button("Reset Service", id="reset_service_button")
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Gestisce la pressione dei bottoni."""
