@@ -1,0 +1,26 @@
+# Parametri delle Action
+actions:
+  arm: "/arm_action"
+  disarm: "/disarm_action"
+  takeoff: "/takeoff_action"
+  landing: "/landing_action"
+  navigate: "/navigate_action"
+
+# Parametri dei Service
+services:
+  enable_component: "/enable_component_service"
+  reset_component: "/reset_component_service"
+
+# Parametri della GUI
+gui:
+  slider_default_values:
+    throttle: 0.5
+    pitch: 0.0
+    roll: 0.0
+    yaw: 0.0
+  select_default_values:
+    mode: "manual"
+    flight_pattern: "hover"
+  checkbox_default_values:
+    safety_check: true
+    logging_enabled: false
