@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
+from rclpy.qos import qos_profile_services_default
 from example_interfaces.srv import Trigger
 from dua_interfaces.action import Arm, Disarm, Takeoff, Landing, Navigate
 import asyncio
@@ -30,12 +31,13 @@ class TerminalNode(Node):
         self.disarm_client = ActionClient(self, Disarm, self.disarm_action_name)
         self.takeoff_client = ActionClient(self, Takeoff, self.takeoff_action_name)
         self.landing_client = ActionClient(self, Landing, self.landing_action_name)
-        self.navigate_client = ActionClient(self, Navigate, self.navigate_action_name)
-
+        self.navigate_client = ActionClient(self, Navigate, self.navigate_action_name)        
+        
         # --- Creazione clients service ---
-        self.enable_service_client = self.create_client(Trigger, self.enable_service_name)
-        self.reset_service_client = self.create_client(Trigger, self.reset_service_name)
-
+        self.enable_service_client = self.create_client(Trigger, self.enable_service_name, qos_profile=qos_profile_services_default)
+        self.reset_service_client = self.create_client(Trigger, self.reset_service_name, qos_profile=qos_profile_services_default)
+    
+    
     # --- Action methods ---
     async def send_arm_goal(self, name: str):
         if not self.arm_client.wait_for_server(timeout_sec=2.0):
