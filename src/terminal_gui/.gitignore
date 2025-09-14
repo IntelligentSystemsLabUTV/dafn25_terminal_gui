@@ -1,26 +1,17 @@
-# ROS2 build, log, install
+# ROS2 build / install / log
 build/
 install/
 log/
-logs/
+**/log/
+**/build/
+**/install/
+
+# Python virtual environments
+venv/
+venv_clean/
 *.pyc
 __pycache__/
 
-# Virtual environments
-textual_app/venv/
-textual_app/venv_clean/
-
-# Dummy servers / temporanei
-dummy_server/
-
-# VSCode
-.vscode/
-
-# MacOS / sistema
-.DS_Store
-*.swp
-*.tmp
-
-# Workspace locali non da versionare
+# Workspace locali che non vuoi tracciare
 dua_ws/
 
