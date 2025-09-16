@@ -2,7 +2,7 @@ import asyncio
 import sys
 import os
 import threading
-import yaml  # Importa yaml per leggere i default
+import yaml  
 
 # Aggiunge la cartella superiore al path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -18,14 +18,12 @@ from terminal_node import TerminalNode
 class TerminalGUI(App):
     CSS_PATH = "style.css"
 
-    # Quando l'utente preme 'q', esegui l'azione 'quit'
+    # Quando premi 'q', esegui l'azione 'quit'
     BINDINGS = [("q", "quit", "Quit")]
 
     def __init__(self):
         super().__init__()
-        # --- MODIFICA 1: __init__ ora è quasi vuoto ---
-        # Inizializziamo solo rclpy e mettiamo dei placeholder.
-        # Il nodo ROS verrà creato in on_mount().
+        
         rclpy.init()
         self.node = None
         self.ros_thread = None
@@ -70,8 +68,7 @@ class TerminalGUI(App):
         yield Input(placeholder="Z Navigate", id="navigate_z")
         yield Button("Navigate", id="navigate_button")
 
-        # --- MODIFICA 2: Usiamo i parametri letti in __init__ ---
-        # Ora possiamo popolare i widget con i valori di default corretti
+        # widget con i valori di default corretti
         yield Input(value=str(self.params['defaults']['throttle']),
                     placeholder="Throttle (0-1)", id="throttle_input")
         yield Checkbox(label="Safety Check", value=self.params['defaults']['safety_check'],
@@ -85,7 +82,6 @@ class TerminalGUI(App):
         Chiamato quando l'app è pronta.
         ORA inizializziamo il nodo ROS e avviamo lo spin.
         """
-        # --- MODIFICA 3: Tutta la logica di creazione del nodo è qui ---
         self.ros_executor = MultiThreadedExecutor()
         self.node = TerminalNode()  # <-- Il nodo viene creato ADESSO
         self.ros_executor.add_node(self.node)
@@ -119,7 +115,6 @@ class TerminalGUI(App):
         self.query_one("#flight_container").display = (tab_name == "Flight")
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
-        # Questo metodo rimane invariato, ma ora funzionerà!
         button_id = event.button.id
         try:
             # --- Services ---

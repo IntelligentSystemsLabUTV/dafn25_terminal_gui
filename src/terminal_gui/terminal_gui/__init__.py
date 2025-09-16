@@ -1,5 +1,5 @@
 # Azioni
-self.arm_action_name = self.params['actions']['arm']
+self.arm_action_name = self.params['actions']['arm'] 
 self.disarm_action_name = self.params['actions']['disarm']
 self.takeoff_action_name = self.params['actions']['takeoff']
 self.landing_action_name = self.params['actions']['landing']
