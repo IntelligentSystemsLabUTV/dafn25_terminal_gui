@@ -2,6 +2,9 @@
 build/*
 install/*
 log/*
+dua_ws/
+src/terminal_gui/textual_app/venv/
+src/terminal_gui/textual_app/venv_clean/
 
 # Uncomment the following to avoid pushing personal configurations
 # .vscode/

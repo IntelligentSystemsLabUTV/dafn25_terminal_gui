@@ -1,0 +1,17 @@
+# Sezione che probabilmente hai già
+actions:
+  arm: "/arm"
+  disarm: "/disarm"
+  takeoff: "/takeoff"
+  landing: "/landing"
+  navigate: "/navigate"
+
+services:
+  enable_component: "/enable"
+  reset_component: "/reset"
+
+# ---> Aggiungi questa nuova sezione <---
+defaults:
+  throttle: 0.5
+  safety_check: true
+  flight_mode: "manual"

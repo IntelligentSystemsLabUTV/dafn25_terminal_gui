@@ -1,0 +1,17 @@
+# ROS2 build / install / log
+build/
+install/
+log/
+**/log/
+**/build/
+**/install/
+
+# Python virtual environments
+venv/
+venv_clean/
+*.pyc
+__pycache__/
+
+# Workspace locali che non vuoi tracciare
+dua_ws/
+
