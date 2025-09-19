@@ -60,38 +60,26 @@ class TerminalNode(Node):
         return result
 
 
-    async def send_takeoff_goal(self, altitude: float) -> Takeoff.Result:
-        """
-        Invia un goal di takeoff al drone e attende il completamento.
-        Controlla sia lo status dell'azione sia il risultato specifico.
-        """
-        # --- Creazione del messaggio goal ---
+    async def send_takeoff_goal(self, altitude: float):
         goal_msg = Takeoff.Goal()
+        # --- correzione: server aspetta takeoff_pose.pose.position.z ---
         pose = PoseStamped()
         pose.pose.position.z = altitude
         goal_msg.takeoff_pose = pose
-
-        # --- Invio del goal ---
+       
         goal_handle = await self.takeoff_client.send_goal(goal_msg)
-
-        # --- Attesa del risultato ---
+        #result = await goal_handle.get_result_async()
+        # Ottieni il risultato dall'azione
         result_response = await goal_handle.get_result_async()
-        status = result_response.status                # <-- Evidenziato: uso corretto dello status dell'azione
-        result: Takeoff.Result = result_response.result  # <-- Evidenziato: risultato vero dell'azione
-
-        # --- Controllo dello status dell'azione ---
-        if status == 4:  # STATUS_SUCCEEDED
-            # Controllo del risultato interno (CommandResultStamped)
-            if result.result.result == CommandResultStamped.SUCCESS:  # <-- Qui sostituito 'success' inesistente
-                self.get_logger().info("Takeoff completato con successo")
-            else:
-                self.get_logger().error(f"Errore Takeoff: {result.result.error_msg}")
+        result: Takeoff.Result = result_response.result
+ 
+        # Controllo del risultato effettivo
+        if result.result.result == CommandResultStamped.SUCCESS:
+            self.get_logger().info("Takeoff completato con successo")
         else:
-            self.get_logger().error(f"Takeoff non riuscito, status: {status}")
-
+            self.get_logger().error(f"Errore Takeoff: {result.result.error_msg}")
+ 
         return result
-
-
 
 
     async def send_landing_goal(self, descend: bool = True, min_z: float = 0.0):
