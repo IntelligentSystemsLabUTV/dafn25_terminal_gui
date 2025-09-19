@@ -3,7 +3,11 @@ from rclpy.node import Node
 from rclpy.action import ActionClient
 from rclpy.qos import qos_profile_services_default
 from example_interfaces.srv import Trigger
-from dua_interfaces.action import Arm, Disarm, Takeoff, Landing, Navigate
+
+from dua_hardware_interfaces.action import Arm, Disarm
+from dua_aircraft_interfaces.action import Takeoff, Landing
+from dua_movement_interfaces.action import Navigate
+
 import asyncio
 import yaml
 
