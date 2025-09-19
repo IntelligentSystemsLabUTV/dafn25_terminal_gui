@@ -1,16 +1,23 @@
-# Sezione che probabilmente hai già
 actions:
-  arm: "/arm"
-  disarm: "/disarm"
-  takeoff: "/takeoff"
-  landing: "/landing"
-  navigate: "/navigate"
+  arm: /test_server_node/arm
+  disarm: /test_server_node/disarm
+  takeoff: /test_server_node/takeoff
+  landing: /test_server_node/landing
+  navigate: /test_server_node/navigate
+
 
 services:
-  enable_component: "/enable"
-  reset_component: "/reset"
+  describe_parameters: /test_server_node/describe_parameters
+  enable_component: /test_server_node/enable_component
+  get_parameter_types: /test_server_node/get_parameter_types
+  get_parameters: /test_server_node/get_parameters
+  get_type_description: /test_server_node/get_type_description
+  list_parameters: /test_server_node/list_parameters
+  reset_component: /test_server_node/reset_component
+  set_parameters: /test_server_node/set_parameters
+  set_parameters_atomically: /test_server_node/set_parameters_atomically
 
-# ---> Aggiungi questa nuova sezione <---
+
 defaults:
   throttle: 0.5
   safety_check: true
