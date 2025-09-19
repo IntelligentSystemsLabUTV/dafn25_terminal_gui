@@ -24,11 +24,14 @@ class TerminalGUI(App):
 
     def __init__(self):
         super().__init__()
-        
+
         rclpy.init()
-        self.node = None
-        self.ros_thread = None
-        self.ros_executor = None
+        # per avere il nodo in background
+        self.node = TerminalNode()
+        self.executor = MultiThreadedExecutor()
+        self.executor.add_node(self.node)
+        
+    
 
         # Carichiamo i parametri qui per averli disponibili in compose()
         params_file = "/home/neo/workspace/src/terminal_gui/params/params.yaml"
@@ -83,6 +86,10 @@ class TerminalGUI(App):
         Chiamato quando l'app è pronta.
         ORA inizializziamo il nodo ROS e avviamo lo spin.
         """
+        #ROBMASOCCO
+        #self.ros_thread = Thread(target=self.executor.spin, daemon=True)
+        #self.ros_thread.start()
+
         self.ros_executor = MultiThreadedExecutor()
         self.node = TerminalNode()  # <-- Il nodo viene creato ADESSO
         self.ros_executor.add_node(self.node)
@@ -104,7 +111,10 @@ class TerminalGUI(App):
 
     def on_unmount(self) -> None:
         """Chiamato quando l'app si chiude per qualsiasi motivo."""
-        self.shutdown_ros()
+        #self.shutdown_ros()
+        #ROB
+        self.executor.shutdown()
+        rclpy.shutdown()
 
     def action_quit(self) -> None:
         """Chiamato quando viene premuto il tasto 'q'."""
