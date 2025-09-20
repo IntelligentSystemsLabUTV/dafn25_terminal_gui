@@ -19,6 +19,7 @@ from terminal_node import TerminalNode
 
 class TerminalGUI(App):
     CSS_PATH = "style.css"
+    LOG = False  # disabilita log automatico
 
     # Quando premi 'q', esegui l'azione 'quit'
     BINDINGS = [("q", "quit", "Quit")]
@@ -66,7 +67,7 @@ class TerminalGUI(App):
 
         # --- Flight ---
         with Container(id="flight_container"):
-            yield Input(placeholder="Altitudine Takeoff", id="takeoff_input")
+            yield Input(placeholder="Altitudine", id="takeoff_input")
             yield Button("Takeoff", id="takeoff_button")
             yield Button("Landing", id="landing_button")
 

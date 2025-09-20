@@ -74,10 +74,10 @@ class TerminalNode(Node):
         result: Takeoff.Result = result_response.result
  
         # Controllo del risultato effettivo
-        if result.result.result == CommandResultStamped.SUCCESS:
-            self.get_logger().info("Takeoff completato con successo")
-        else:
-            self.get_logger().error(f"Errore Takeoff: {result.result.error_msg}")
+        #if result.result.result == CommandResultStamped.SUCCESS:
+        #    self.get_logger().info("Takeoff completato con successo")
+        #else:
+        #    self.get_logger().error(f"Errore Takeoff: {result.result.error_msg}")
  
         return result
 
@@ -92,10 +92,10 @@ class TerminalNode(Node):
         result: Landing.Result = result_response.result
 
         # Controllo del risultato effettivo
-        if result.result.result == CommandResultStamped.SUCCESS:
-            self.get_logger().info("Landing completato con successo")
-        else:
-            self.get_logger().error(f"Errore Landing: {result.result.error_msg}")
+        #if result.result.result == CommandResultStamped.SUCCESS:
+        #    self.get_logger().info("Landing completato con successo")
+        #else:
+        #    self.get_logger().error(f"Errore Landing: {result.result.error_msg}")
  
         return result
 
