@@ -87,7 +87,16 @@ class TerminalNode(Node):
         # --- correzione: server aspetta minimums.point.z e descend ---
         goal_msg.minimums.point = Point(x=0.0, y=0.0, z=min_z)
         goal_msg.descend = descend
-        result = await self.landing_client.send_goal(goal_msg)
+        goal_handle = await self.landing_client.send_goal(goal_msg)
+        result_response = await goal_handle.get_result_async()
+        result: Landing.Result = result_response.result
+
+        # Controllo del risultato effettivo
+        if result.result.result == CommandResultStamped.SUCCESS:
+            self.get_logger().info("Landing completato con successo")
+        else:
+            self.get_logger().error(f"Errore Landing: {result.result.error_msg}")
+ 
         return result
 
     async def send_navigate_goal(self, x: float, y: float, z: float):
