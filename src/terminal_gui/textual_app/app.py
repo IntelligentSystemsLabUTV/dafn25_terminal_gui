@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from textual.app import App, ComposeResult
 from textual.widgets import Tabs, Tab, Static, Button, Input, Checkbox
+from textual.containers import Container
 
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
@@ -38,39 +39,42 @@ class TerminalGUI(App):
         with open(params_file, 'r') as f:
             self.params = yaml.safe_load(f)
 
+    def on_tabs_tab_activated(self, event: Tabs.TabActivated) -> None:
+       """Mostra il contenitore corretto in base al tab selezionato."""
+       self.set_tab_visibility(event.tab.label)
+
     def compose(self) -> ComposeResult:
         # Tabs
         yield Tabs(
-            Tab("Services"),
-            Tab("Arm/Disarm"),
-            Tab("Flight"),
+            Tab("Services", id="services_tab"),
+            Tab("Arm/Disarm", id="arm_tab"),
+            Tab("Flight", id="flight_tab"),
         )
 
-        # Containers
-        yield Static("Services Tab", id="services_container")
-        yield Static("Arm/Disarm Tab", id="arm_container")
-        yield Static("Flight Tab", id="flight_container")
 
         # --- Services ---
-        yield Button("Enable Service", id="enable_service_button")
-        yield Button("Reset Service", id="reset_service_button")
-        yield Static("Feedback: ", id="services_feedback")
+        with Container(id="services_container"):
+            yield Button("Enable Service", id="enable_service_button")
+            yield Button("Reset Service", id="reset_service_button")
+            yield Static("Feedback: ", id="services_feedback")
 
         # --- Arm/Disarm ---
-        yield Input(placeholder="Nome Robot", id="arm_name_input")
-        yield Button("Arm", id="arm_button")
-        yield Button("Disarm", id="disarm_button")
-        yield Static("Feedback: ", id="arm_feedback")
+        with Container(id="arm_container"):
+            #yield Input(placeholder="Nome Robot", id="arm_name_input")
+            yield Button("Arm", id="arm_button")
+            yield Button("Disarm", id="disarm_button")
+            yield Static("Feedback: ", id="arm_feedback")
 
         # --- Flight ---
-        yield Input(placeholder="Altitudine Takeoff", id="takeoff_input")
-        yield Button("Takeoff", id="takeoff_button")
-        yield Button("Landing", id="landing_button")
+        with Container(id="flight_container"):
+            yield Input(placeholder="Altitudine Takeoff", id="takeoff_input")
+            yield Button("Takeoff", id="takeoff_button")
+            yield Button("Landing", id="landing_button")
 
-        yield Input(placeholder="X Navigate", id="navigate_x")
-        yield Input(placeholder="Y Navigate", id="navigate_y")
-        yield Input(placeholder="Z Navigate", id="navigate_z")
-        yield Button("Navigate", id="navigate_button")
+            yield Input(placeholder="X Navigate", id="navigate_x")
+            yield Input(placeholder="Y Navigate", id="navigate_y")
+            yield Input(placeholder="Z Navigate", id="navigate_z")
+            yield Button("Navigate", id="navigate_button")
 
         # widget con i valori di default corretti
         yield Static("Feedback: ", id="flight_feedback")
@@ -114,7 +118,7 @@ class TerminalGUI(App):
         """Chiamato quando viene premuto il tasto 'q'."""
         self.exit()
 
-    def set_tab_visibility(self, tab_name: str):
+    def set_tab_visibility(self, tab_name: str) -> None:
         self.query_one("#services_container").display = (tab_name == "Services")
         self.query_one("#arm_container").display = (tab_name == "Arm/Disarm")
         self.query_one("#flight_container").display = (tab_name == "Flight")
