@@ -60,7 +60,6 @@ class TerminalGUI(App):
 
         # --- Arm/Disarm ---
         with Container(id="arm_container"):
-            #yield Input(placeholder="Nome Robot", id="arm_name_input")
             yield Button("Arm", id="arm_button")
             yield Button("Disarm", id="disarm_button")
             yield Static("Feedback: ", id="arm_feedback")
@@ -75,9 +74,8 @@ class TerminalGUI(App):
             yield Input(placeholder="Y Navigate", id="navigate_y")
             yield Input(placeholder="Z Navigate", id="navigate_z")
             yield Button("Navigate", id="navigate_button")
+            yield Static("Feedback: ", id="flight_feedback")
 
-        # widget con i valori di default corretti
-        yield Static("Feedback: ", id="flight_feedback")
 
     def on_mount(self) -> None:
         """
@@ -137,21 +135,19 @@ class TerminalGUI(App):
                 self.query_one("#services_feedback", Static).update(f"Reset Service riuscito: {result.message}")
             # --- Arm/Disarm ---
             elif button_id == "arm_button":
-                name = self.query_one("#arm_name_input", Input).value
-                if not name.strip():
-                    self.query_one("#arm_feedback", Static).update("Errore: inserire un nome valido")
-                    return
-                self.query_one("#arm_feedback", Static).update(f"Invio richiesta ARM per '{name}'...")
-                result = await self.node.send_arm_goal(name)
-                self.query_one("#arm_feedback", Static).update(f"Feedback ARM: {result.status}")
+                self.query_one("#arm_feedback", Static).update(f"Invio richiesta per ARM ")
+                result = await self.node.send_arm_goal()
+                if result.status == 0:
+                        self.query_one("#arm_feedback", Static).update(f"Feedback ARM: accepted")
+                else:
+                    self.query_one("#arm_feedback", Static).update(f"Feedback ARM: denied")
             elif button_id == "disarm_button":
-                name = self.query_one("#arm_name_input", Input).value
-                if not name.strip():
-                    self.query_one("#arm_feedback", Static).update("Errore: inserire un nome valido")
-                    return
-                self.query_one("#arm_feedback", Static).update(f"Invio richiesta DISARM per '{name}'...")
-                result = await self.node.send_disarm_goal(name)
-                self.query_one("#arm_feedback", Static).update(f"Feedback DISARM: {result.status}")
+                self.query_one("#arm_feedback", Static).update(f"Invio richiesta per DISARM")
+                result = await self.node.send_disarm_goal()
+                if result.status == 0:
+                    self.query_one("#arm_feedback", Static).update(f"Feedback DISARM: accepted")
+                else:
+                    self.query_one("#arm_feedback", Static).update(f"Feedback DISARM: denied")
             # --- Flight ---
             elif button_id == "takeoff_button":
                 input_value = self.query_one("#takeoff_input", Input).value

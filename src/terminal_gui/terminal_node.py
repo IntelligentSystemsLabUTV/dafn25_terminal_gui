@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_services_default
-from example_interfaces.srv import Trigger
+from std_srvs.srv import SetBool, Trigger
 from dua_hardware_interfaces.action import Arm, Disarm
 from dua_aircraft_interfaces.action import Takeoff, Landing
 from dua_movement_interfaces.action import Navigate
@@ -10,6 +10,7 @@ import asyncio
 import yaml
 from geometry_msgs.msg import PoseStamped, Point
 from dua_common_interfaces.msg import CommandResultStamped
+
 
 
 class TerminalNode(Node):
@@ -29,8 +30,8 @@ class TerminalNode(Node):
         self.landing_action_name = self.params['actions']['landing']
         self.navigate_action_name = self.params['actions']['navigate']
 
-        self.enable_service_name = self.params['services']['enable_component']
-        self.reset_service_name = self.params['services']['reset_component']
+        #self.enable_service_name = self.params['services']['enable_component']
+        #self.reset_service_name = self.params['services']['reset_component']
 
         # --- Creazione clients action ---
         self.arm_client = SimpleActionClient(self, Arm, self.arm_action_name)
@@ -39,23 +40,22 @@ class TerminalNode(Node):
         self.landing_client = SimpleActionClient(self, Landing, self.landing_action_name)
         self.navigate_client = SimpleActionClient(self, Navigate, self.navigate_action_name)
 
-        # --- Creazione clients service ---
-        self.enable_service_client = self.create_client(
-            Trigger, self.enable_service_name, qos_profile=qos_profile_services_default)
-        self.reset_service_client = self.create_client(
-            Trigger, self.reset_service_name, qos_profile=qos_profile_services_default)
+        # Client per Enable/Disable
+        self.enable_service_name = "/test_server_node/enable_component"
+        self.enable_service_client = self.create_client(SetBool, self.enable_service_name)
 
+        # Client per Reset
+        self.reset_service_name = "/test_server_node/reset_component"
+        self.reset_service_client = self.create_client(Trigger, self.reset_service_name)
     # --- Action methods ---
 
-    async def send_arm_goal(self, name: str):
-        goal_msg = Arm.Goal()
-        goal_msg.name = name
+    async def send_arm_goal(self):
+        goal_msg = Arm.Goal()  # goal vuoto, nessun campo name
         result = await self.arm_client.send_goal(goal_msg)
         return result
 
-    async def send_disarm_goal(self, name: str):
-        goal_msg = Disarm.Goal()
-        goal_msg.name = name
+    async def send_disarm_goal(self):
+        goal_msg = Disarm.Goal()  # goal vuoto
         result = await self.disarm_client.send_goal(goal_msg)
         return result
 
@@ -109,12 +109,13 @@ class TerminalNode(Node):
         return result
 
     # --- Service methods ---
-    async def call_enable_service(self):
+    async def call_enable_service(self, enable: bool = True):
         if not self.enable_service_client.wait_for_service(timeout_sec=2.0):
             raise RuntimeError(f"Service '{self.enable_service_name}' non disponibile.")
-        req = Trigger.Request()
+        req = SetBool.Request()
+        req.data = enable   # True = enable, False = disable
         future = self.enable_service_client.call_async(req)
-        result = await asyncio.wrap_future(future)
+        result = await future
         return result
 
     async def call_reset_service(self):
@@ -122,5 +123,5 @@ class TerminalNode(Node):
             raise RuntimeError(f"Service '{self.reset_service_name}' non disponibile.")
         req = Trigger.Request()
         future = self.reset_service_client.call_async(req)
-        result = await asyncio.wrap_future(future)
+        result = await future
         return result
