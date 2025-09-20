@@ -73,12 +73,6 @@ class TerminalGUI(App):
         yield Button("Navigate", id="navigate_button")
 
         # widget con i valori di default corretti
-        yield Input(value=str(self.params['defaults']['throttle']),
-                    placeholder="Throttle (0-1)", id="throttle_input")
-        yield Checkbox(label="Safety Check", value=self.params['defaults']['safety_check'],
-                       id="safety_checkbox")
-        yield Input(value=self.params['defaults']['flight_mode'],
-                    placeholder="Flight Mode", id="flight_mode_input")
         yield Static("Feedback: ", id="flight_feedback")
 
     def on_mount(self) -> None:
