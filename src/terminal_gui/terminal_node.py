@@ -30,8 +30,6 @@ class TerminalNode(Node):
         self.landing_action_name = self.params['actions']['landing']
         self.navigate_action_name = self.params['actions']['navigate']
 
-        #self.enable_service_name = self.params['services']['enable_component']
-        #self.reset_service_name = self.params['services']['reset_component']
 
         # --- Creazione clients action ---
         self.arm_client = SimpleActionClient(self, Arm, self.arm_action_name)
@@ -47,22 +45,21 @@ class TerminalNode(Node):
         # Client per Reset
         self.reset_service_name = "/test_server_node/reset_component"
         self.reset_service_client = self.create_client(Trigger, self.reset_service_name)
-    # --- Action methods ---
 
+    # --- Action methods ---
     async def send_arm_goal(self):
-        goal_msg = Arm.Goal()  # goal vuoto, nessun campo name
+        goal_msg = Arm.Goal()  
         result = await self.arm_client.send_goal(goal_msg)
         return result
 
     async def send_disarm_goal(self):
-        goal_msg = Disarm.Goal()  # goal vuoto
+        goal_msg = Disarm.Goal()  
         result = await self.disarm_client.send_goal(goal_msg)
         return result
 
 
     async def send_takeoff_goal(self, altitude: float):
         goal_msg = Takeoff.Goal()
-        # --- correzione: server aspetta takeoff_pose.pose.position.z ---
         pose = PoseStamped()
         pose.pose.position.z = altitude
         goal_msg.takeoff_pose = pose
@@ -73,29 +70,16 @@ class TerminalNode(Node):
         result_response = await goal_handle.get_result_async()
         result: Takeoff.Result = result_response.result
  
-        # Controllo del risultato effettivo
-        #if result.result.result == CommandResultStamped.SUCCESS:
-        #    self.get_logger().info("Takeoff completato con successo")
-        #else:
-        #    self.get_logger().error(f"Errore Takeoff: {result.result.error_msg}")
- 
         return result
 
 
     async def send_landing_goal(self, descend: bool = True, min_z: float = 0.0):
         goal_msg = Landing.Goal()
-        # --- correzione: server aspetta minimums.point.z e descend ---
         goal_msg.minimums.point = Point(x=0.0, y=0.0, z=min_z)
         goal_msg.descend = descend
         goal_handle = await self.landing_client.send_goal(goal_msg)
         result_response = await goal_handle.get_result_async()
         result: Landing.Result = result_response.result
-
-        # Controllo del risultato effettivo
-        #if result.result.result == CommandResultStamped.SUCCESS:
-        #    self.get_logger().info("Landing completato con successo")
-        #else:
-        #    self.get_logger().error(f"Errore Landing: {result.result.error_msg}")
  
         return result
 

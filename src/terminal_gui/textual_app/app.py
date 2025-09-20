@@ -4,7 +4,7 @@ import os
 import threading
 import yaml  
 
-# ciao ciao
+
 # Aggiunge la cartella superiore al path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -19,7 +19,7 @@ from terminal_node import TerminalNode
 
 class TerminalGUI(App):
     CSS_PATH = "style.css"
-    LOG = False  # disabilita log automatico
+
 
     # Quando premi 'q', esegui l'azione 'quit'
     BINDINGS = [("q", "quit", "Quit")]
@@ -83,12 +83,9 @@ class TerminalGUI(App):
         Chiamato quando l'app è pronta.
         ORA inizializziamo il nodo ROS e avviamo lo spin.
         """
-        #ROBMASOCCO
-        #self.ros_thread = Thread(target=self.executor.spin, daemon=True)
-        #self.ros_thread.start()
-
+        
         self.ros_executor = MultiThreadedExecutor()
-        self.node = TerminalNode()  # <-- Il nodo viene creato ADESSO
+        self.node = TerminalNode()  
         self.ros_executor.add_node(self.node)
         
         # Crea e avvia il thread per lo spin di ROS in background
@@ -108,8 +105,6 @@ class TerminalGUI(App):
 
     def on_unmount(self) -> None:
         """Chiamato quando l'app si chiude per qualsiasi motivo."""
-        #self.shutdown_ros()
-        #ROB
         self.executor.shutdown()
         rclpy.shutdown()
 
