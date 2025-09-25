@@ -6,11 +6,11 @@ from dua_hardware_interfaces.action import Arm, Disarm
 from dua_aircraft_interfaces.action import Takeoff, Landing
 from dua_movement_interfaces.action import Navigate
 from simple_actionclient_py.simple_actionclient import Client as SimpleActionClient
+from simple_serviceclient_py.simple_serviceclient import Client as SimpleServiceClient
 import asyncio
 import yaml
 from geometry_msgs.msg import PoseStamped, Point
 from dua_common_interfaces.msg import CommandResultStamped
-
 
 
 class TerminalNode(Node):
@@ -40,11 +40,11 @@ class TerminalNode(Node):
 
         # Client per Enable/Disable
         self.enable_service_name = "/test_server_node/enable_component"
-        self.enable_service_client = self.create_client(SetBool, self.enable_service_name)
+        self.enable_service_client = SimpleServiceClient(self, SetBool, self.enable_service_name)
 
         # Client per Reset
         self.reset_service_name = "/test_server_node/reset_component"
-        self.reset_service_client = self.create_client(Trigger, self.reset_service_name)
+        self.reset_service_client = SimpleServiceClient(self, Trigger, self.reset_service_name)
 
     # --- Action methods ---
     async def send_arm_goal(self):
@@ -63,13 +63,13 @@ class TerminalNode(Node):
         pose = PoseStamped()
         pose.pose.position.z = altitude
         goal_msg.takeoff_pose = pose
-       
+
         goal_handle = await self.takeoff_client.send_goal(goal_msg)
         #result = await goal_handle.get_result_async()
         # Ottieni il risultato dall'azione
         result_response = await goal_handle.get_result_async()
         result: Takeoff.Result = result_response.result
- 
+
         return result
 
 
@@ -92,20 +92,20 @@ class TerminalNode(Node):
         result = await self.navigate_client.send_goal(goal_msg)
         return result
 
-    # --- Service methods ---
+    # --- Service methods con SimpleServiceClient ---
     async def call_enable_service(self, enable: bool = True):
-        if not self.enable_service_client.wait_for_service(timeout_sec=2.0):
-            raise RuntimeError(f"Service '{self.enable_service_name}' non disponibile.")
+        client = self.create_client(SetBool, '/test_server_node/enable_component')
+        await client.wait_for_service()  # questa è async
+
         req = SetBool.Request()
-        req.data = enable   # True = enable, False = disable
-        future = self.enable_service_client.call_async(req)
-        result = await future
-        return result
+        req.data = enable
+
+        future = client.call_async(req)
+        rclpy.spin_until_future_complete(self, future)  # questo blocca finché non arriva risposta
+        return future.result()  # ritorna il messaggio (non booleano)
+
 
     async def call_reset_service(self):
-        if not self.reset_service_client.wait_for_service(timeout_sec=2.0):
-            raise RuntimeError(f"Service '{self.reset_service_name}' non disponibile.")
         req = Trigger.Request()
-        future = self.reset_service_client.call_async(req)
-        result = await future
+        result = await self.reset_service_client.call_async(req)
         return result

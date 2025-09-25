@@ -2,7 +2,7 @@ import asyncio
 import sys
 import os
 import threading
-import yaml  
+import yaml
 
 
 # Aggiunge la cartella superiore al path
@@ -15,6 +15,8 @@ from textual.containers import Container
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
 from terminal_node import TerminalNode
+from dua_common_interfaces.msg import CommandResultStamped
+
 
 
 class TerminalGUI(App):
@@ -28,12 +30,6 @@ class TerminalGUI(App):
         super().__init__()
 
         rclpy.init()
-        # per avere il nodo in background
-        self.node = TerminalNode()
-        self.executor = MultiThreadedExecutor()
-        self.executor.add_node(self.node)
-        
-    
 
         # Carichiamo i parametri qui per averli disponibili in compose()
         params_file = "/home/neo/workspace/src/terminal_gui/params/params.yaml"
@@ -85,12 +81,12 @@ class TerminalGUI(App):
         """
         
         self.ros_executor = MultiThreadedExecutor()
-        self.node = TerminalNode()  
+        self.node = TerminalNode()
         self.ros_executor.add_node(self.node)
         
         # Crea e avvia il thread per lo spin di ROS in background
         self.ros_thread = threading.Thread(target=self.ros_executor.spin, daemon=True)
-        self.ros_thread.start() 
+        self.ros_thread.start()
         
         self.set_tab_visibility("Services")
 
@@ -123,8 +119,9 @@ class TerminalGUI(App):
             # --- Services ---
             if button_id == "enable_service_button":
                 self.query_one("#services_feedback", Static).update("Chiamata a Enable Service in corso...")
-                result = await self.node.call_enable_service()
-                self.query_one("#services_feedback", Static).update(f"Enable Service riuscito: {result.message}")
+                result: CommandResultStamped = await self.node.call_enable_service()
+                status_text = ["SUCCESS", "FAILED", "ERROR"][result.result]
+                self.query_one("#services_feedback", Static).update(f"Enable Service: {status_text} {result.error_msg}")
             elif button_id == "reset_service_button":
                 self.query_one("#services_feedback", Static).update("Chiamata a Reset Service in corso...")
                 result = await self.node.call_reset_service()
