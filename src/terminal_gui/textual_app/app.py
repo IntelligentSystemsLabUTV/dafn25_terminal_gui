@@ -153,10 +153,12 @@ class TerminalGUI(App):
                 self.query_one("#flight_feedback", Static).update(f"Takeoff a {altitude}m in corso...")
                 result = await self.node.send_takeoff_goal(altitude)
                 self.query_one("#flight_feedback", Static).update(f"Takeoff completato con successo")
+
             elif button_id == "landing_button":
                 self.query_one("#flight_feedback", Static).update("Landing in corso...")
                 result = await self.node.send_landing_goal()
                 self.query_one("#flight_feedback", Static).update(f"Landing completato con successo")
+
             elif button_id == "navigate_button":
                 try:
                     x = float(self.query_one("#navigate_x", Input).value)
@@ -165,9 +167,15 @@ class TerminalGUI(App):
                 except ValueError:
                     self.query_one("#flight_feedback", Static).update("Errore: coordinate non valide")
                     return
+
                 self.query_one("#flight_feedback", Static).update(f"Navigazione verso ({x}, {y}, {z}) in corso...")
+
+                # Aspetta che l'azione sia completata
                 result = await self.node.send_navigate_goal(x, y, z)
+
+                # Aggiorna la GUI con lo stato finale
                 self.query_one("#flight_feedback", Static).update(f"Navigazione completata con successo")
+
         except Exception as e:
             if button_id in ["enable_service_button", "reset_service_button"]:
                 self.query_one("#services_feedback", Static).update(f"ERRORE: {e}")

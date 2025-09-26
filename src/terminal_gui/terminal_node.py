@@ -58,7 +58,6 @@ class TerminalNode(Node):
         result = await self.disarm_client.send_goal(goal_msg)
         return result
 
-
     async def send_takeoff_goal(self, altitude: float):
         goal_msg = Takeoff.Goal()
         pose = PoseStamped()
@@ -89,8 +88,16 @@ class TerminalNode(Node):
         goal_msg.target_pose.pose.position.x = x
         goal_msg.target_pose.pose.position.y = y
         goal_msg.target_pose.pose.position.z = z
-        result = await self.navigate_client.send_goal(goal_msg)
+
+        # Invia il goal
+        goal_handle = await self.navigate_client.send_goal(goal_msg)
+
+        # Attendi il completamento
+        result_response = await goal_handle.get_result_async()
+        result: Navigate.Result = result_response.result
+
         return result
+
 
     # --- Service methods con SimpleServiceClient ---
     async def call_enable_service(self, enable: bool = True) -> CommandResultStamped:
