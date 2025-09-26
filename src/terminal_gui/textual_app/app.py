@@ -154,8 +154,16 @@ class TerminalGUI(App):
                 self.query_one("#flight_feedback", Static).update(f"Takeoff: {result.error_msg}")
 
             elif button_id == "landing_button":
-                self.query_one("#flight_feedback", Static).update("Landing in corso...")
-                result: CommandResultStamped = await self.node.send_landing_goal()
+                input_value = self.query_one("#takeoff_input", Input).value
+                try:
+                    min_z = float(input_value)
+                except ValueError:
+                    self.query_one("#flight_feedback", Static).update("Errore: Altitudine non valida")
+                    return
+
+                self.query_one("#flight_feedback", Static).update(f"Landing a {min_z} m in corso...")
+                result: CommandResultStamped = await self.node.send_landing_goal(min_z=min_z)
+                status_text = ["SUCCESS", "FAILED", "ERROR"][result.result]
                 self.query_one("#flight_feedback", Static).update(f"Landing: {result.error_msg}")
 
             elif button_id == "navigate_button":

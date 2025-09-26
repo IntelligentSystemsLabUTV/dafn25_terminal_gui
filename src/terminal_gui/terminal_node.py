@@ -10,7 +10,7 @@ from simple_serviceclient_py.simple_serviceclient import Client as SimpleService
 import asyncio
 from geometry_msgs.msg import PoseStamped, Point
 from dua_common_interfaces.msg import CommandResultStamped
-
+import math
 
 class TerminalNode(Node):
 
@@ -94,7 +94,13 @@ class TerminalNode(Node):
 
     # Flight
     async def send_takeoff_goal(self, altitude: float) -> CommandResultStamped:
-        result_msg = CommandResultStamped()
+        # --- CONTROLLO ALTITUDINE ---
+        if altitude <= 0:
+            return CommandResultStamped(
+                result=1,
+                error_msg=f"Takeoff failed: altitude must be > 0 (given: {altitude})"
+            )
+
         goal_msg = Takeoff.Goal()
         pose = PoseStamped()
         pose.pose.position.z = altitude
@@ -106,22 +112,37 @@ class TerminalNode(Node):
                 self.takeoff_client.send_goal(goal_msg),
                 timeout=5.0
             )
+
             result_response = await goal_handle.get_result_async()
             result = getattr(result_response, "result", None)
 
-            result_msg.result = 0
-            result_msg.error_msg = getattr(result, "feedback", f"Takeoff to {altitude} m completed")
-        except asyncio.TimeoutError:
-            result_msg.result = 1
-            result_msg.error_msg = "Takeoff failed: action server not available"
-        except Exception as e:
-            result_msg.result = 2
-            result_msg.error_msg = f"Takeoff failed: {e}"
+            # feedback invariato
+            return CommandResultStamped(
+                result=0,
+                error_msg=getattr(result, "feedback", f"Takeoff to {altitude} m completed")
+            )
 
-        return result_msg
+        except asyncio.TimeoutError:
+            return CommandResultStamped(
+                result=1,
+                error_msg="Takeoff failed: action server not available"
+            )
+        except Exception as e:
+            return CommandResultStamped(
+                result=2,
+                error_msg=f"Takeoff failed: {e}"
+            )
+
 
     async def send_landing_goal(self, descend: bool = True, min_z: float = 0.0) -> CommandResultStamped:
         result_msg = CommandResultStamped()
+
+        # Controllo minimo
+        if min_z < 0:
+            result_msg.result = 1
+            result_msg.error_msg = f"Landing failed: minimum altitude must be >= 0 (given: {min_z})"
+            return result_msg
+
         goal_msg = Landing.Goal()
         goal_msg.minimums.point = Point(x=0.0, y=0.0, z=min_z)
         goal_msg.descend = descend
@@ -131,11 +152,18 @@ class TerminalNode(Node):
                 self.landing_client.send_goal(goal_msg),
                 timeout=5.0
             )
+
+            # Controllo se il goal è stato accettato
+            if goal_handle.status != 0:  # STATUS_ACCEPTED
+                result_msg.result = 1
+                result_msg.error_msg = "Landing denied by server"
+                return result_msg
+
             result_response = await goal_handle.get_result_async()
             result = getattr(result_response, "result", None)
 
             result_msg.result = 0
-            result_msg.error_msg = getattr(result, "feedback", "Landing completed")
+            result_msg.error_msg = getattr(result, "feedback", f"Landing to {min_z} m completed")
         except asyncio.TimeoutError:
             result_msg.result = 1
             result_msg.error_msg = "Landing failed: action server not available"
@@ -145,9 +173,14 @@ class TerminalNode(Node):
 
         return result_msg
 
-
     async def send_navigate_goal(self, x: float, y: float, z: float) -> CommandResultStamped:
-        result_msg = CommandResultStamped()
+        # --- CONTROLLO COORDINATE ---
+        if not all(map(lambda v: isinstance(v, (int, float)) and math.isfinite(v), [x, y, z])):
+            return CommandResultStamped(
+                result=1,
+                error_msg=f"Navigation failed: coordinates must be finite numbers (given: x={x}, y={y}, z={z})"
+            )
+
         goal_msg = Navigate.Goal()
         goal_msg.target_pose = PoseStamped()
         goal_msg.target_pose.pose.position.x = x
@@ -162,16 +195,21 @@ class TerminalNode(Node):
             result_response = await goal_handle.get_result_async()
             result = getattr(result_response, "result", None)
 
-            result_msg.result = 0
-            result_msg.error_msg = getattr(result, "feedback", f"Navigation to ({x},{y},{z}) completed")
-        except asyncio.TimeoutError:
-            result_msg.result = 1
-            result_msg.error_msg = "Navigation failed: action server not available"
-        except Exception as e:
-            result_msg.result = 2
-            result_msg.error_msg = f"Navigation failed: {e}"
+            return CommandResultStamped(
+                result=0,
+                error_msg=getattr(result, "feedback", f"Navigation to ({x},{y},{z}) completed")
+            )
 
-        return result_msg
+        except asyncio.TimeoutError:
+            return CommandResultStamped(
+                result=1,
+                error_msg="Navigation failed: action server not available"
+            )
+        except Exception as e:
+            return CommandResultStamped(
+                result=2,
+                error_msg=f"Navigation failed: {e}"
+            )
 
     # --- Service methods con SimpleServiceClient ---
     # --- ENABLE ---
