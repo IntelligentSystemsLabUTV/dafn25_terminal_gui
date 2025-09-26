@@ -2,7 +2,6 @@ import asyncio
 import sys
 import os
 import threading
-import yaml
 
 
 # Aggiunge la cartella superiore al path
@@ -22,19 +21,13 @@ from dua_common_interfaces.msg import CommandResultStamped
 class TerminalGUI(App):
     CSS_PATH = "style.css"
 
-
     # Quando premi 'q', esegui l'azione 'quit'
     BINDINGS = [("q", "quit", "Quit")]
 
     def __init__(self):
         super().__init__()
-
         rclpy.init()
 
-        # Carichiamo i parametri qui per averli disponibili in compose()
-        params_file = "/home/neo/workspace/src/terminal_gui/params/params.yaml"
-        with open(params_file, 'r') as f:
-            self.params = yaml.safe_load(f)
 
     def on_tabs_tab_activated(self, event: Tabs.TabActivated) -> None:
        """Mostra il contenitore corretto in base al tab selezionato."""

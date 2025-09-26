@@ -8,7 +8,6 @@ from dua_movement_interfaces.action import Navigate
 from simple_actionclient_py.simple_actionclient import Client as SimpleActionClient
 from simple_serviceclient_py.simple_serviceclient import Client as SimpleServiceClient
 import asyncio
-import yaml
 from geometry_msgs.msg import PoseStamped, Point
 from dua_common_interfaces.msg import CommandResultStamped
 
@@ -18,18 +17,20 @@ class TerminalNode(Node):
     def __init__(self):
         super().__init__('terminal_node')
 
-        # --- Caricamento parametri ---
-        params_file = "/home/neo/workspace/src/terminal_gui/params/params.yaml"
-        with open(params_file, 'r') as f:
-            self.params = yaml.safe_load(f)
+        # Dichiarazione dei parametri direttamente nel nodo
+        self.declare_parameter('actions.arm', '/test_server_node/arm')
+        self.declare_parameter('actions.disarm', '/test_server_node/disarm')
+        self.declare_parameter('actions.takeoff', '/test_server_node/takeoff')
+        self.declare_parameter('actions.landing', '/test_server_node/landing')
+        self.declare_parameter('actions.navigate', '/test_server_node/navigate')
 
-        # --- Nomi action e service ---
-        self.arm_action_name = self.params['actions']['arm']
-        self.disarm_action_name = self.params['actions']['disarm']
-        self.takeoff_action_name = self.params['actions']['takeoff']
-        self.landing_action_name = self.params['actions']['landing']
-        self.navigate_action_name = self.params['actions']['navigate']
 
+        # Lettura dei parametri
+        self.arm_action_name = self.get_parameter('actions.arm').get_parameter_value().string_value
+        self.disarm_action_name = self.get_parameter('actions.disarm').get_parameter_value().string_value
+        self.takeoff_action_name = self.get_parameter('actions.takeoff').get_parameter_value().string_value
+        self.landing_action_name = self.get_parameter('actions.landing').get_parameter_value().string_value
+        self.navigate_action_name = self.get_parameter('actions.navigate').get_parameter_value().string_value
 
         # --- Creazione clients action ---
         self.arm_client = SimpleActionClient(self, Arm, self.arm_action_name)
@@ -65,7 +66,7 @@ class TerminalNode(Node):
         goal_msg.takeoff_pose = pose
 
         goal_handle = await self.takeoff_client.send_goal(goal_msg)
-        #result = await goal_handle.get_result_async()
+
         # Ottieni il risultato dall'azione
         result_response = await goal_handle.get_result_async()
         result: Takeoff.Result = result_response.result
