@@ -48,23 +48,49 @@ class TerminalNode(Node):
         self.reset_service_client = SimpleServiceClient(self, Trigger, self.reset_service_name)
 
     # --- Action methods ---
+
+    # --- ARM ---
     async def send_arm_goal(self) -> CommandResultStamped:
         goal_msg = Arm.Goal()
-        result_handle = await self.arm_client.send_goal(goal_msg)
-
         result_msg = CommandResultStamped()
-        result_msg.result = 0 if result_handle.status == 0 else 1
-        result_msg.error_msg = "Accepted" if result_handle.status == 0 else "Denied"
+        try:
+            # timeout di 5 secondi per la connessione al server
+            result_handle = await asyncio.wait_for(self.arm_client.send_goal(goal_msg), timeout=5.0)
+
+            # manteniamo la logica esistente
+            result_msg.result = 0 if result_handle.status == 0 else 1
+            result_msg.error_msg = "Accepted" if result_handle.status == 0 else "Denied"
+
+        except asyncio.TimeoutError:
+            result_msg.result = 1
+            result_msg.error_msg = "Arm failed: action server not available"
+        except Exception as e:
+            result_msg.result = 2
+            result_msg.error_msg = f"Arm failed: {e}"
+
         return result_msg
 
+
+    # --- DISARM ---
     async def send_disarm_goal(self) -> CommandResultStamped:
         goal_msg = Disarm.Goal()
-        result_handle = await self.disarm_client.send_goal(goal_msg)
-
         result_msg = CommandResultStamped()
-        result_msg.result = 0 if result_handle.status == 0 else 1
-        result_msg.error_msg = "Accepted" if result_handle.status == 0 else "Denied"
+        try:
+            result_handle = await asyncio.wait_for(self.disarm_client.send_goal(goal_msg), timeout=5.0)
+
+            # manteniamo la logica esistente
+            result_msg.result = 0 if result_handle.status == 0 else 1
+            result_msg.error_msg = "Accepted" if result_handle.status == 0 else "Denied"
+
+        except asyncio.TimeoutError:
+            result_msg.result = 1
+            result_msg.error_msg = "Disarm failed: action server not available"
+        except Exception as e:
+            result_msg.result = 2
+            result_msg.error_msg = f"Disarm failed: {e}"
+
         return result_msg
+
 
     # Flight
     async def send_takeoff_goal(self, altitude: float) -> CommandResultStamped:
@@ -148,26 +174,36 @@ class TerminalNode(Node):
         return result_msg
 
     # --- Service methods con SimpleServiceClient ---
+    # --- ENABLE ---
     async def call_enable_service(self, enable: bool = True) -> CommandResultStamped:
         req = SetBool.Request()
         req.data = enable
-
-        # Usa il client già creato nel __init__
-        response = await self.enable_service_client.call_async(req)
-
         result_msg = CommandResultStamped()
-        result_msg.result = 0 if response.success else 1
-        result_msg.error_msg = response.message or ""
+        try:
+            response = await asyncio.wait_for(self.enable_service_client.call_async(req), timeout=5.0)
+            result_msg.result = 0 if response.success else 1
+            result_msg.error_msg = response.message or ""
+        except asyncio.TimeoutError:
+            result_msg.result = 1
+            result_msg.error_msg = "Enable service failed: service not available"
+        except Exception as e:
+            result_msg.result = 2
+            result_msg.error_msg = f"Enable service failed: {e}"
         return result_msg
 
 
+    # --- RESET ---
     async def call_reset_service(self) -> CommandResultStamped:
         req = Trigger.Request()
-
-        response = await self.reset_service_client.call_async(req)
-
         result_msg = CommandResultStamped()
-        # Trigger ha solo success e message
-        result_msg.result = 0 if response.success else 1
-        result_msg.error_msg = response.message or ""
+        try:
+            response = await asyncio.wait_for(self.reset_service_client.call_async(req), timeout=5.0)
+            result_msg.result = 0 if response.success else 1
+            result_msg.error_msg = response.message or ""
+        except asyncio.TimeoutError:
+            result_msg.result = 1
+            result_msg.error_msg = "Reset service failed: service not available"
+        except Exception as e:
+            result_msg.result = 2
+            result_msg.error_msg = f"Reset service failed: {e}"
         return result_msg
