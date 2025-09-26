@@ -48,12 +48,12 @@ class TerminalNode(Node):
 
     # --- Action methods ---
     async def send_arm_goal(self):
-        goal_msg = Arm.Goal()  
+        goal_msg = Arm.Goal()
         result = await self.arm_client.send_goal(goal_msg)
         return result
 
     async def send_disarm_goal(self):
-        goal_msg = Disarm.Goal()  
+        goal_msg = Disarm.Goal()
         result = await self.disarm_client.send_goal(goal_msg)
         return result
 
@@ -80,7 +80,6 @@ class TerminalNode(Node):
         goal_handle = await self.landing_client.send_goal(goal_msg)
         result_response = await goal_handle.get_result_async()
         result: Landing.Result = result_response.result
- 
         return result
 
     async def send_navigate_goal(self, x: float, y: float, z: float):
@@ -93,19 +92,26 @@ class TerminalNode(Node):
         return result
 
     # --- Service methods con SimpleServiceClient ---
-    async def call_enable_service(self, enable: bool = True):
-        client = self.create_client(SetBool, '/test_server_node/enable_component')
-        await client.wait_for_service()  # questa è async
-
+    async def call_enable_service(self, enable: bool = True) -> CommandResultStamped:
         req = SetBool.Request()
         req.data = enable
 
-        future = client.call_async(req)
-        rclpy.spin_until_future_complete(self, future)  # questo blocca finché non arriva risposta
-        return future.result()  # ritorna il messaggio (non booleano)
+        # Usa il client già creato nel __init__
+        response = await self.enable_service_client.call_async(req)
+
+        result_msg = CommandResultStamped()
+        result_msg.result = 0 if response.success else 1
+        result_msg.error_msg = response.message or ""
+        return result_msg
 
 
-    async def call_reset_service(self):
+    async def call_reset_service(self) -> CommandResultStamped:
         req = Trigger.Request()
-        result = await self.reset_service_client.call_async(req)
-        return result
+
+        response = await self.reset_service_client.call_async(req)
+
+        result_msg = CommandResultStamped()
+        # Trigger ha solo success e message
+        result_msg.result = 0 if response.success else 1
+        result_msg.error_msg = response.message or ""
+        return result_msg

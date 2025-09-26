@@ -79,15 +79,15 @@ class TerminalGUI(App):
         Chiamato quando l'app è pronta.
         ORA inizializziamo il nodo ROS e avviamo lo spin.
         """
-        
+
         self.ros_executor = MultiThreadedExecutor()
         self.node = TerminalNode()
         self.ros_executor.add_node(self.node)
-        
+
         # Crea e avvia il thread per lo spin di ROS in background
         self.ros_thread = threading.Thread(target=self.ros_executor.spin, daemon=True)
         self.ros_thread.start()
-        
+
         self.set_tab_visibility("Services")
 
     def shutdown_ros(self):
@@ -116,16 +116,20 @@ class TerminalGUI(App):
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         button_id = event.button.id
         try:
+
             # --- Services ---
             if button_id == "enable_service_button":
                 self.query_one("#services_feedback", Static).update("Chiamata a Enable Service in corso...")
                 result: CommandResultStamped = await self.node.call_enable_service()
                 status_text = ["SUCCESS", "FAILED", "ERROR"][result.result]
                 self.query_one("#services_feedback", Static).update(f"Enable Service: {status_text} {result.error_msg}")
+
             elif button_id == "reset_service_button":
                 self.query_one("#services_feedback", Static).update("Chiamata a Reset Service in corso...")
-                result = await self.node.call_reset_service()
-                self.query_one("#services_feedback", Static).update(f"Reset Service riuscito: {result.message}")
+                result: CommandResultStamped = await self.node.call_reset_service()
+                status_text = ["SUCCESS", "FAILED", "ERROR"][result.result]
+                self.query_one("#services_feedback", Static).update(f"Reset Service: {status_text} {result.error_msg}")
+
             # --- Arm/Disarm ---
             elif button_id == "arm_button":
                 self.query_one("#arm_feedback", Static).update(f"Invio richiesta per ARM ")
@@ -141,6 +145,7 @@ class TerminalGUI(App):
                     self.query_one("#arm_feedback", Static).update(f"Feedback DISARM: accepted")
                 else:
                     self.query_one("#arm_feedback", Static).update(f"Feedback DISARM: denied")
+
             # --- Flight ---
             elif button_id == "takeoff_button":
                 input_value = self.query_one("#takeoff_input", Input).value
