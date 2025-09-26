@@ -129,35 +129,34 @@ class TerminalGUI(App):
 
             # --- Arm/Disarm ---
             elif button_id == "arm_button":
-                self.query_one("#arm_feedback", Static).update(f"Invio richiesta per ARM ")
-                result = await self.node.send_arm_goal()
-                if result.status == 0:
-                        self.query_one("#arm_feedback", Static).update(f"Feedback ARM: accepted")
-                else:
-                    self.query_one("#arm_feedback", Static).update(f"Feedback ARM: denied")
+                self.query_one("#arm_feedback", Static).update("Invio richiesta per ARM...")
+                result: CommandResultStamped = await self.node.send_arm_goal()
+                status_text = ["SUCCESS", "FAILED", "ERROR"][result.result]
+                self.query_one("#arm_feedback", Static).update(f"Feedback ARM: {status_text} {result.error_msg}")
+
             elif button_id == "disarm_button":
-                self.query_one("#arm_feedback", Static).update(f"Invio richiesta per DISARM")
-                result = await self.node.send_disarm_goal()
-                if result.status == 0:
-                    self.query_one("#arm_feedback", Static).update(f"Feedback DISARM: accepted")
-                else:
-                    self.query_one("#arm_feedback", Static).update(f"Feedback DISARM: denied")
+                self.query_one("#arm_feedback", Static).update("Invio richiesta per DISARM...")
+                result: CommandResultStamped = await self.node.send_disarm_goal()
+                status_text = ["SUCCESS", "FAILED", "ERROR"][result.result]
+                self.query_one("#arm_feedback", Static).update(f"Feedback DISARM: {status_text} {result.error_msg}")
 
             # --- Flight ---
             elif button_id == "takeoff_button":
                 input_value = self.query_one("#takeoff_input", Input).value
-                try: altitude = float(input_value)
+                try:
+                    altitude = float(input_value)
                 except ValueError:
                     self.query_one("#flight_feedback", Static).update("Errore: Altitudine non valida")
                     return
-                self.query_one("#flight_feedback", Static).update(f"Takeoff a {altitude}m in corso...")
-                result = await self.node.send_takeoff_goal(altitude)
-                self.query_one("#flight_feedback", Static).update(f"Takeoff completato con successo")
+
+                self.query_one("#flight_feedback", Static).update(f"Takeoff a {altitude} m in corso...")
+                result: CommandResultStamped = await self.node.send_takeoff_goal(altitude)
+                self.query_one("#flight_feedback", Static).update(f"Takeoff: {result.error_msg}")
 
             elif button_id == "landing_button":
                 self.query_one("#flight_feedback", Static).update("Landing in corso...")
-                result = await self.node.send_landing_goal()
-                self.query_one("#flight_feedback", Static).update(f"Landing completato con successo")
+                result: CommandResultStamped = await self.node.send_landing_goal()
+                self.query_one("#flight_feedback", Static).update(f"Landing: {result.error_msg}")
 
             elif button_id == "navigate_button":
                 try:
@@ -169,12 +168,8 @@ class TerminalGUI(App):
                     return
 
                 self.query_one("#flight_feedback", Static).update(f"Navigazione verso ({x}, {y}, {z}) in corso...")
-
-                # Aspetta che l'azione sia completata
-                result = await self.node.send_navigate_goal(x, y, z)
-
-                # Aggiorna la GUI con lo stato finale
-                self.query_one("#flight_feedback", Static).update(f"Navigazione completata con successo")
+                result: CommandResultStamped = await self.node.send_navigate_goal(x, y, z)
+                self.query_one("#flight_feedback", Static).update(f"Navigazione: {result.error_msg}")
 
         except Exception as e:
             if button_id in ["enable_service_button", "reset_service_button"]:
@@ -183,6 +178,7 @@ class TerminalGUI(App):
                 self.query_one("#arm_feedback", Static).update(f"ERRORE: {e}")
             else:
                 self.query_one("#flight_feedback", Static).update(f"ERRORE: {e}")
+
 
 if __name__ == "__main__":
     app = TerminalGUI()
