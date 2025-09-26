@@ -79,7 +79,7 @@ class TerminalGUI(App):
         Chiamato quando l'app è pronta.
         ORA inizializziamo il nodo ROS e avviamo lo spin.
         """
-
+        #Executor ROS
         self.ros_executor = MultiThreadedExecutor()
         self.node = TerminalNode()
         self.ros_executor.add_node(self.node)
@@ -101,8 +101,12 @@ class TerminalGUI(App):
 
     def on_unmount(self) -> None:
         """Chiamato quando l'app si chiude per qualsiasi motivo."""
-        self.executor.shutdown()
-        rclpy.shutdown()
+        if hasattr(self, "ros_executor") and self.ros_executor is not None:
+            self.ros_executor.shutdown()
+        if hasattr(self, "ros_thread") and self.ros_thread.is_alive():
+            self.ros_thread.join(timeout=1.0)
+        if rclpy.ok():
+            rclpy.shutdown()
 
     def action_quit(self) -> None:
         """Chiamato quando viene premuto il tasto 'q'."""
