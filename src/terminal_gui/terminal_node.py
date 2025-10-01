@@ -11,7 +11,7 @@ import asyncio
 from geometry_msgs.msg import PoseStamped, Point
 from dua_common_interfaces.msg import CommandResultStamped
 import math
-
+from action_msgs.msg import GoalStatus
 class TerminalNode(Node):
 
     def __init__(self):
@@ -55,11 +55,25 @@ class TerminalNode(Node):
         result_msg = CommandResultStamped()
         try:
             # timeout di 5 secondi per la connessione al server
-            result_handle = await asyncio.wait_for(self.arm_client.send_goal(goal_msg), timeout=5.0)
+            goal_handle = await asyncio.wait_for(self.arm_client.send_goal(goal_msg), timeout=5.0)
+            
+            if not goal_handle.accepted:
+                result_msg.result = 1
+                result_msg.error_msg = "Denied by action server"
+                return result_msg
+            
+            result = await goal_handle.get_result_async()
+
+            if result.status == GoalStatus.STATUS_SUCCEEDED:
+                result_msg.result = 0
+                result_msg.error_msg = "Success"
+            else:
+                result_msg.result = 1
+                result_msg.error_msg = f"Failed with status {result.status}"
 
             # manteniamo la logica esistente
-            result_msg.result = 0 if result_handle.status == 0 else 1
-            result_msg.error_msg = "Accepted" if result_handle.status == 0 else "Denied"
+            #result_msg.result = 0 if result_handle.status == 0 else 1
+            #result_msg.error_msg = "Accepted" if result_handle.status == 0 else "Denied"
 
         except asyncio.TimeoutError:
             result_msg.result = 1
@@ -77,10 +91,25 @@ class TerminalNode(Node):
         result_msg = CommandResultStamped()
         try:
             result_handle = await asyncio.wait_for(self.disarm_client.send_goal(goal_msg), timeout=5.0)
+            goal_handle = await asyncio.wait_for(self.disarm_client.send_goal(goal_msg), timeout=5.0)
+            
+            if not goal_handle.accepted:
+                result_msg.result = 1
+                result_msg.error_msg = "Denied by action server"
+                return result_msg
+            
+            result = await goal_handle.get_result_async()
+
+            if result.status == GoalStatus.STATUS_SUCCEEDED:
+                result_msg.result = 0
+                result_msg.error_msg = "Success"
+            else:
+                result_msg.result = 1
+                result_msg.error_msg = f"Failed with status {result.status}"
 
             # manteniamo la logica esistente
-            result_msg.result = 0 if result_handle.status == 0 else 1
-            result_msg.error_msg = "Accepted" if result_handle.status == 0 else "Denied"
+            #result_msg.result = 0 if result_handle.status == 0 else 1
+            #result_msg.error_msg = "Accepted" if result_handle.status == 0 else "Denied"
 
         except asyncio.TimeoutError:
             result_msg.result = 1
