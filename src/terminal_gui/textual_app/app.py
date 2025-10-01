@@ -47,12 +47,13 @@ class TerminalGUI(App):
             yield Button("Enable Service", id="enable_service_button")
             yield Button("Reset Service", id="reset_service_button")
             yield Static("Feedback: ", id="services_feedback")
-
+            yield Static("To exit press 'q'")
         # --- Arm/Disarm ---
         with Container(id="arm_container"):
             yield Button("Arm", id="arm_button")
             yield Button("Disarm", id="disarm_button")
             yield Static("Feedback: ", id="arm_feedback")
+            yield Static("To exit press 'q'")
 
         # --- Flight ---
         with Container(id="flight_container"):
@@ -65,6 +66,7 @@ class TerminalGUI(App):
             yield Input(placeholder="Z Navigate", id="navigate_z")
             yield Button("Navigate", id="navigate_button")
             yield Static("Feedback: ", id="flight_feedback")
+            yield Static("To exit press 'q'")
 
 
     def on_mount(self) -> None:
